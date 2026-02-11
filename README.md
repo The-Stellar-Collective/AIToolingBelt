@@ -7,6 +7,27 @@ En samling verktyg och guider för AI-integration.
 - **[Installation av AI-verktyg (CLI & Desktop Apps)](./CLI_INSTALLATIONSGUIDE.md)** - Komplett guide för installation av Claude, ChatGPT och Gemini på Mac, Windows och Linux
 - **[Historia över AI-verktyg](./HISTORY.md)** - Utvecklingshistoria, design-filosofier och tankar bakom varje verktyg
 - **[Utvecklarverktyg](./TOOLS.md)** - Installation av VS Code och rekommenderade Markdown-extensions på alla plattformar
+- **[Filosofi bakom AI och Matematik](./FILOSOFI.md)** - Filosofiska motsättningar, från Quetelet och Markov till modern AI
+
+---
+
+MARKOV'S JOURNEY:
+
+  1. Observation (1900s):
+     "Bokstäver i rysk text är inte oberoende!
+     Övergångarna följer mönster"
+
+  2. Insikt (1906):
+     "Nästa tillstånd beror bara på nuvarande, inte historiken
+     Vi kan modellera detta med övergångssannolikheter!"
+
+  3. Formalisering (1906):
+     "Här är matematiken bakom detta..."
+     (Markov chains + stationär distribution)
+
+  4. Verifiering:
+     "Här's det för 'Eugene Onegin'"
+     (Bevis med verklig data)
 
 ## Tidslinje
  1. GPU-Computing Infrastructure (2004-2008)
