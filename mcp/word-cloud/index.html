@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Word Cloud</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.5/d3.layout.cloud.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-1: #38bdf8; /* Cyan */
+            --accent-2: #f472b6; /* Pink */
+            --accent-3: #a3e635; /* Lime */
+            --accent-4: #c084fc; /* Purple */
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(192, 132, 252, 0.1) 0%, transparent 40%);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Overlay Interface */
+        .interface {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through to canvas mostly */
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2rem;
+        }
+
+        header {
+            pointer-events: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-style: italic;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--glass-border);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.connected {
+            background-color: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            pointer-events: auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 24px;
+            width: 300px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Canvas Area */
+        #cloud-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            /* display: flex; center not needed with d3 transform */
+            background: transparent;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            transform: translateY(10px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 100;
+            max-width: 300px;
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tooltip-title {
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+            color: var(--accent-1);
+            text-transform: capitalize;
+        }
+
+        .tooltip-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .tooltip-desc {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        /* Footer */
+        footer {
+            pointer-events: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 2rem;
+        }
+
+        .control-bar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 12px 24px;
+            border-radius: 20px;
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .key-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .key-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        /* Connection Lines */
+        .connection-line {
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 2px;
+            fill: none;
+            pointer-events: auto; /* Allow interaction */
+            stroke-dasharray: 5,5;
+            animation: dash 30s linear infinite;
+            cursor: pointer;
+        }
+        
+        /* Invisible thicker line for easier clicking */
+        .connection-hit-area {
+            stroke: transparent;
+            stroke-width: 15px;
+            fill: none;
+            pointer-events: stroke;
+            cursor: pointer;
+        }
+
+        .drag-line {
+            stroke: var(--accent-1);
+            stroke-width: 3px;
+            stroke-dasharray: 5,5;
+            fill: none;
+            pointer-events: none;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 1000;
+            }
+        }
+
+        .cloud-word {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .cloud-word:hover {
+            cursor: crosshair; /* Indicate linking is possible */
+        }
+        
+        /* Highlight style */
+        .connection-highlight {
+            stroke: #ef4444 !important; /* Red on hover */
+            stroke-dasharray: none !important;
+            filter: drop-shadow(0 0 5px #ef4444);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="interface">
+        <header>
+            <div class="brand">
+                <h1>Idea Cloud</h1>
+                <span class="subtitle">Live Visualization System</span>
+            </div>
+            <div class="status-badge">
+                <div id="status-dot" class="status-dot"></div>
+                <span id="status-text">Connecting...</span>
+            </div>
+        </header>
+
+        <div style="flex: 1; display: flex; align-items: center; justify-content: flex-end; pointer-events: none;">
+            <div class="stats-panel">
+                <div class="stat-row">
+                    <span class="stat-label">Active Nodes</span>
+                    <span class="stat-value" id="total-words">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Connections</span>
+                    <span class="stat-value" id="total-connections">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Dominant Category</span>
+                    <span class="stat-value" id="top-category">-</span>
+                </div>
+                <div style="margin-top: 15px; pt-3; border-top: 1px solid rgba(255,255,255,0.1)">
+                     <p style="font-size: 0.8rem; color: #64748b; margin-top: 10px;">
+                        <strong>Instructions:</strong><br>
+                        • Drag from one word to another to connect.<br>
+                        • Right-click a connection to remove it.<br>
+                        • Scroll to zoom, drag background to pan.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="control-bar">
+                <div class="key-item"><span class="key-dot" style="background: #ff6b6b"></span> MCP Servers</div>
+                <div class="key-item"><span class="key-dot" style="background: #667eea"></span> Verktyg</div>
+                <div class="key-item"><span class="key-dot" style="background: #43e97b"></span> Språk</div>
+                <div class="key-item"><span class="key-dot" style="background: #fa709a"></span> Ramverk</div>
+                <div class="key-item"><span class="key-dot" style="background: #f093fb"></span> Teknologi</div>
+                <div class="key-item"><span class="key-dot" style="background: #4facfe"></span> Koncept</div>
+                <div class="key-item"><span class="key-dot" style="background: #30cfd0"></span> Databas</div>
+            </div>
+        </footer>
+    </div>
+
+    <div id="cloud-container"></div>
+
+    <div id="tooltip" class="tooltip">
+        <div class="tooltip-title" id="tt-word"></div>
+        <span class="tooltip-meta" id="tt-category"></span>
+        <div class="tooltip-desc" id="tt-desc"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const CLOUD_PADDING = 120;
+        const width = window.innerWidth - CLOUD_PADDING;
+        const height = window.innerHeight - CLOUD_PADDING;
+        const container = document.getElementById('cloud-container');
+        
+        // Colors mapping based on category
+        const categoryColors = {
+            'mcp': '#ff6b6b', 'verktyg': '#667eea', 'språk': '#43e97b',
+            'ramverk': '#fa709a', 'teknologi': '#f093fb', 'koncept': '#4facfe',
+            'databas': '#30cfd0', 'roll': '#a8edea', 'metod': '#764ba2',
+            'default': '#cbd5e1'
+        };
+
+        function getColor(category) {
+            return categoryColors[category] || categoryColors['default'];
+        }
+
+        // State
+        let currentData = { words: [], connections: [] };
+        let svg = null;
+        let zoomGroup = null; // Container for zooming
+        let linksGroup = null;
+        let wordsGroup = null;
+        let dragLine = null;
+        let layout = null;
+        
+        // Interaction State
+        let isDrawing = false;
+        let sourceNode = null;
+
+        function initCloud() {
+            container.innerHTML = '';
+            
+            // Full screen SVG
+            svg = d3.select("#cloud-container").append("svg")
+                .attr("width", window.innerWidth)
+                .attr("height", window.innerHeight)
+                // Disable default context menu on SVG to allow our custom one
+                .on("contextmenu", (e) => e.preventDefault());
+
+            // Zoom behavior
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 4])
+                .on("zoom", (event) => {
+                    zoomGroup.attr("transform", event.transform);
+                });
+
+            svg.call(zoom);
+
+            // Definitions (markers)
+            const defs = svg.append("defs");
+            defs.append("marker")
+                .attr("id", "arrowhead")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 25)
+                .attr("refY", 0)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M0,-5L10,0L0,5")
+                .attr("fill", "rgba(255, 255, 255, 0.3)");
+
+            // Main group for zooming
+            zoomGroup = svg.append("g");
+
+            // Center content initially (approximate)
+            const centerGroup = zoomGroup.append("g")
+                .attr("transform", "translate(" + window.innerWidth / 2 + "," + window.innerHeight / 2 + ")");
+
+            linksGroup = centerGroup.append("g").attr("class", "links");
+            wordsGroup = centerGroup.append("g").attr("class", "words");
+            
+            // Drag line (temporary)
+            dragLine = centerGroup.append("path")
+                .attr("class", "drag-line")
+                .attr("d", "M0,0L0,0")
+                .style("opacity", 0);
+
+            // Global mouse events for dragging - attach to window to catch releases anywhere
+            d3.select(window)
+               .on("mousemove", handleGlobalMouseMove)
+               .on("mouseup", handleGlobalMouseUp);
+        }
+
+        // Category display names
+        const categoryLabels = {
+            'mcp': 'MCP Server', 'verktyg': 'Verktyg', 'språk': 'Språk',
+            'ramverk': 'Ramverk', 'teknologi': 'Teknologi', 'koncept': 'Koncept',
+            'databas': 'Databas', 'roll': 'Roll', 'metod': 'Metod'
+        };
+
+        function updateCloud(data) {
+            currentData = data;
+            const wordsData = data.words || [];
+            const connectionsData = data.connections || [];
+
+            // Update stats
+            document.getElementById('total-words').textContent = wordsData.length;
+            document.getElementById('total-connections').textContent = connectionsData.length;
+
+            if (wordsData.length > 0) {
+                const counts = {};
+                wordsData.forEach(w => { counts[w.category] = (counts[w.category] || 0) + 1; });
+                const topCat = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+                document.getElementById('top-category').textContent = categoryLabels[topCat] || topCat.charAt(0).toUpperCase() + topCat.slice(1);
+            } else {
+                 document.getElementById('top-category').textContent = "-";
+            }
+
+            const fontScale = d3.scaleLinear()
+                .domain([1, 10])
+                .range([20, 80]);
+
+            layout = d3.layout.cloud()
+                .size([width, height])
+                .words(wordsData.map(d => ({
+                    text: d.word,
+                    size: d.size || 5,
+                    category: d.category || 'default',
+                    description: d.description || ''
+                })))
+                .padding(25)
+                .rotate(() => (~~(Math.random() * 2) * 90))
+                .font("Inter")
+                .fontSize(d => fontScale(d.size))
+                .on("end", draw);
+
+            layout.start();
+        }
+
+        function draw(words) {
+            // --- WORDS ---
+            const texts = wordsGroup.selectAll("text")
+                .data(words, d => d.text);
+
+            texts.exit()
+                .transition().duration(500)
+                .style("opacity", 0)
+                .remove();
+
+            const enter = texts.enter().append("text")
+                .style("font-size", "1px")
+                .style("opacity", 0)
+                .style("font-family", "Inter")
+                .style("font-weight", "800")
+                .style("fill", d => getColor(d.category))
+                .attr("text-anchor", "middle")
+                .text(d => d.text)
+                .attr("class", "cloud-word")
+                // Interaction events
+                .on("mouseover", handleMouseOver)
+                .on("mousemove", handleTooltipMove)
+                .on("mouseout", handleMouseOut)
+                .on("mousedown", handleWordMouseDown)
+                .on("mouseup", handleWordMouseUp);
+
+            texts.merge(enter)
+                .transition()
+                .duration(1000)
+                .style("font-size", d => d.size + "px")
+                .style("opacity", 1)
+                .attr("transform", d => "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")");
+
+            // --- CONNECTIONS ---
+            const wordMap = {};
+            words.forEach(w => { wordMap[w.text.toLowerCase()] = w; });
+
+            const validConnections = (currentData.connections || []).filter(c => 
+                wordMap[c.source.toLowerCase()] && wordMap[c.target.toLowerCase()]
+            ).map(c => ({
+                source: wordMap[c.source.toLowerCase()],
+                target: wordMap[c.target.toLowerCase()],
+                label: c.label,
+                id: c.source + "-" + c.target // Unique ID for key
+            }));
+
+            // We need groups for connections to handle both visible line and invisible hit-area
+            const linkGroups = linksGroup.selectAll("g")
+                .data(validConnections, d => d.id);
+
+            linkGroups.exit().remove();
+
+            const linksEnter = linkGroups.enter().append("g");
+            
+            // Visible line
+            linksEnter.append("path")
+                .attr("class", "connection-line")
+                .attr("id", d => "line-" + d.id)
+                .attr("marker-end", "url(#arrowhead)");
+                
+            // Invisible hit area (thicker)
+            linksEnter.append("path")
+                .attr("class", "connection-hit-area")
+                .on("mouseover", function(event, d) {
+                    d3.select("#line-" + d.id).classed("connection-highlight", true);
+                })
+                .on("mouseout", function(event, d) {
+                    d3.select("#line-" + d.id).classed("connection-highlight", false);
+                })
+                .on("contextmenu", function(event, d) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    removeConnection(d.source.text, d.target.text);
+                });
+
+            // Update all paths
+            linkGroups.merge(linksEnter).selectAll("path")
+                .transition().duration(1000)
+                .attr("d", d => {
+                    return `M${d.source.x},${d.source.y} Q${(d.source.x+d.target.x)/2},${(d.source.y+d.target.y)/2 - 50} ${d.target.x},${d.target.y}`;
+                });
+        }
+
+        // --- INTERACTION LOGIC ---
+
+        function handleWordMouseDown(event, d) {
+            event.stopPropagation(); // Prevent zoom start
+            event.preventDefault();  // Prevent native drag/select
+            if (event.button !== 0) return; // Only left click for drawing
+            
+            isDrawing = true;
+            sourceNode = d;
+            
+            // Show drag line starting at node
+            dragLine
+                .style("opacity", 1)
+                .attr("d", `M${d.x},${d.y}L${d.x},${d.y}`);
+        }
+
+        function handleGlobalMouseMove(event) {
+            if (!isDrawing || !sourceNode) return;
+
+            // Get mouse position relative to the centered group with zoom
+            const transform = d3.zoomTransform(svg.node());
+            const [mx, my] = d3.pointer(event, svg.node());
+            
+            const ix = (mx - transform.x) / transform.k;
+            const iy = (my - transform.y) / transform.k;
+
+            const cx = ix - window.innerWidth / 2;
+            const cy = iy - window.innerHeight / 2;
+
+            dragLine.attr("d", `M${sourceNode.x},${sourceNode.y}L${cx},${cy}`);
+        }
+
+        function handleWordMouseUp(event, d) {
+            if (isDrawing && sourceNode && sourceNode !== d) {
+                event.stopPropagation();
+                createConnection(sourceNode.text, d.text);
+            }
+            isDrawing = false;
+            sourceNode = null;
+            dragLine.style("opacity", 0);
+        }
+
+        function handleGlobalMouseUp() {
+            if (isDrawing) {
+                isDrawing = false;
+                sourceNode = null;
+                dragLine.style("opacity", 0);
+            }
+        }
+
+        function createConnection(source, target) {
+            fetch('/api/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source, target })
+            });
+        }
+
+        function removeConnection(source, target) {
+             fetch('/api/disconnect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source, target })
+            });
+        }
+
+        // --- TOOLTIP LOGIC ---
+        const tooltip = document.getElementById('tooltip');
+        
+        function handleMouseOver(event, d) {
+            if (isDrawing) return;
+            
+            d3.select(event.target)
+                .transition().duration(200)
+                .style("filter", "brightness(1.5) drop-shadow(0 0 10px " + getColor(d.category) + ")");
+
+            document.getElementById('tt-word').textContent = d.text;
+            document.getElementById('tt-category').textContent = (categoryLabels[d.category] || d.category).toUpperCase();
+            document.getElementById('tt-category').style.color = getColor(d.category);
+            document.getElementById('tt-desc').textContent = d.description || "Ingen beskrivning tillgänglig.";
+
+            tooltip.classList.add('visible');
+        }
+
+        function handleTooltipMove(event) {
+            const x = event.pageX + 20;
+            const y = event.pageY + 20;
+            tooltip.style.left = x + 'px';
+            tooltip.style.top = y + 'px';
+        }
+
+        function handleMouseOut(event, d) {
+             d3.select(event.target)
+                .transition().duration(200)
+                .style("filter", "none");
+            
+            tooltip.classList.remove('visible');
+        }
+
+        // --- APP INIT ---
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+
+        function updateStatus(connected) {
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'System Online';
+                statusText.style.color = '#fff';
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+                statusText.style.color = '#ef4444';
+            }
+        }
+
+        function connectSSE() {
+            const eventSource = new EventSource('/api/events');
+            eventSource.onopen = () => updateStatus(true);
+            eventSource.onmessage = (event) => updateCloud(JSON.parse(event.data));
+            eventSource.onerror = () => {
+                updateStatus(false);
+                eventSource.close();
+                setTimeout(connectSSE, 5000);
+            };
+        }
+
+        initCloud();
+        
+        fetch('/api/words')
+            .then(res => res.json())
+            .then(data => {
+                updateCloud(data);
+                connectSSE();
+            })
+            .catch(e => { console.error(e); connectSSE(); });
+            
+        window.addEventListener('resize', () => location.reload());
+
+    </script>
+</body>
+</html>

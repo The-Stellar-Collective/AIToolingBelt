@@ -1,0 +1,10 @@
+# Large Files MCP Server Requirements
+# MCP (Model Context Protocol) server for managing large files
+
+# Core MCP SDK
+mcp>=1.0.0
+
+# Python 3.10+ required for:
+# - Modern type hints (list[str], dict[str, Any])
+# - Pattern matching
+# - async/await features
