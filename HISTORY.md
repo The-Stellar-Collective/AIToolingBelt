@@ -1680,6 +1680,21 @@ Utan Transformers hade vi fortfarande stannat kring 1-2 miljarder parameters.
 
 ---
 
-*Sista uppdatering: 2026-02-11*
+## Idéhistorisk tolkning: Quetelet, Nekrasov, Markov
+
+Den här historien kan också läsas genom en äldre statistisk lins:
+
+- **Quetelet (1796-1874):** motsvarar hur sökmotorer fungerade i praktiken, där många källor vägs ihop för att hitta en gemensam sanning.  
+  ![Adolphe Quetelet](https://commons.wikimedia.org/wiki/Special:FilePath/Adolphe%20Qu%C3%A9telet%20by%20Joseph-Arnold%20Demannez.jpg)
+- **Nekrasov (1853-1924):** motsvarar vad man länge trodde att AI skulle ge, en mer entydig och samlad sanning med tydliga regler.  
+  ![Pavel Nekrasov](https://commons.wikimedia.org/wiki/Special:FilePath/NekrasovPA-2.jpg)
+- **Markov (1856-1922):** motsvarar vad vi faktiskt fick, system där betydelse skapas sekventiellt av kontext och beroenden mellan steg.  
+  ![Andrey Markov](https://commons.wikimedia.org/wiki/Special:FilePath/AAMarkov.jpg)
+
+Kort sagt: från sökningens "genomsnittliga sanning", via förväntan om en enhetlig AI-sanning, till dagens kontextuella och kedjebaserade språkmodeller.
+
+---
+
+*Sista uppdatering: 2026-02-17*
 
 Notering: Denna historia är baserad på offentlig information och tidslinjer fram till februari 2025. Senare utvecklingar kan ha skett.

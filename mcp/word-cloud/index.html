@@ -350,8 +350,8 @@
     <script>
         // Configuration
         const CLOUD_PADDING = 120;
-        const width = window.innerWidth - CLOUD_PADDING;
-        const height = window.innerHeight - CLOUD_PADDING;
+        let width = window.innerWidth - CLOUD_PADDING;
+        let height = window.innerHeight - CLOUD_PADDING;
         const container = document.getElementById('cloud-container');
         
         // Colors mapping based on category
@@ -379,59 +379,71 @@
         let isDrawing = false;
         let sourceNode = null;
 
-        function initCloud() {
-            container.innerHTML = '';
-            
+        function initCloud(redraw = false) {
+            if (!redraw) {
+                container.innerHTML = '';
+            }
+
             // Full screen SVG
-            svg = d3.select("#cloud-container").append("svg")
-                .attr("width", window.innerWidth)
-                .attr("height", window.innerHeight)
+            if (!svg) {
+                svg = d3.select("#cloud-container").append("svg");
+            }
+
+            svg.attr("width", window.innerWidth)
+                .attr("height", window.innerHeight);
+
+            if (!redraw) {
                 // Disable default context menu on SVG to allow our custom one
-                .on("contextmenu", (e) => e.preventDefault());
+                svg.on("contextmenu", (e) => e.preventDefault());
 
-            // Zoom behavior
-            const zoom = d3.zoom()
-                .scaleExtent([0.1, 4])
-                .on("zoom", (event) => {
-                    zoomGroup.attr("transform", event.transform);
-                });
+                // Zoom behavior
+                const zoom = d3.zoom()
+                    .scaleExtent([0.1, 4])
+                    .on("zoom", (event) => {
+                        zoomGroup.attr("transform", event.transform);
+                    });
 
-            svg.call(zoom);
+                svg.call(zoom);
 
-            // Definitions (markers)
-            const defs = svg.append("defs");
-            defs.append("marker")
-                .attr("id", "arrowhead")
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", 25)
-                .attr("refY", 0)
-                .attr("markerWidth", 6)
-                .attr("markerHeight", 6)
-                .attr("orient", "auto")
-                .append("path")
-                .attr("d", "M0,-5L10,0L0,5")
-                .attr("fill", "rgba(255, 255, 255, 0.3)");
+                // Definitions (markers)
+                const defs = svg.append("defs");
+                defs.append("marker")
+                    .attr("id", "arrowhead")
+                    .attr("viewBox", "0 -5 10 10")
+                    .attr("refX", 25)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 6)
+                    .attr("markerHeight", 6)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-5L10,0L0,5")
+                    .attr("fill", "rgba(255, 255, 255, 0.3)");
 
-            // Main group for zooming
-            zoomGroup = svg.append("g");
+                // Main group for zooming
+                zoomGroup = svg.append("g");
 
-            // Center content initially (approximate)
-            const centerGroup = zoomGroup.append("g")
-                .attr("transform", "translate(" + window.innerWidth / 2 + "," + window.innerHeight / 2 + ")");
+                // Center content initially (approximate)
+                const centerGroup = zoomGroup.append("g")
+                    .attr("transform", "translate(" + window.innerWidth / 2 + "," + window.innerHeight / 2 + ")");
 
-            linksGroup = centerGroup.append("g").attr("class", "links");
-            wordsGroup = centerGroup.append("g").attr("class", "words");
-            
-            // Drag line (temporary)
-            dragLine = centerGroup.append("path")
-                .attr("class", "drag-line")
-                .attr("d", "M0,0L0,0")
-                .style("opacity", 0);
+                linksGroup = centerGroup.append("g").attr("class", "links");
+                wordsGroup = centerGroup.append("g").attr("class", "words");
 
-            // Global mouse events for dragging - attach to window to catch releases anywhere
-            d3.select(window)
-               .on("mousemove", handleGlobalMouseMove)
-               .on("mouseup", handleGlobalMouseUp);
+                // Drag line (temporary)
+                dragLine = centerGroup.append("path")
+                    .attr("class", "drag-line")
+                    .attr("d", "M0,0L0,0")
+                    .style("opacity", 0);
+
+                // Global mouse events for dragging - attach to window to catch releases anywhere
+                d3.select(window)
+                   .on("mousemove", handleGlobalMouseMove)
+                   .on("mouseup", handleGlobalMouseUp);
+            } else {
+                // On resize, update the center group position
+                zoomGroup.select("g")
+                    .attr("transform", "translate(" + window.innerWidth / 2 + "," + window.innerHeight / 2 + ")");
+            }
         }
 
         // Category display names
@@ -689,8 +701,27 @@
             };
         }
 
+        // Debounced resize handler
+        let resizeTimeout;
+        function handleResize() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                // Update dimensions
+                width = window.innerWidth - CLOUD_PADDING;
+                height = window.innerHeight - CLOUD_PADDING;
+
+                // Update SVG size and center position
+                initCloud(true);
+
+                // Redraw cloud with new dimensions if we have data
+                if (currentData && currentData.words && currentData.words.length > 0) {
+                    updateCloud(currentData);
+                }
+            }, 250); // Wait 250ms after last resize event
+        }
+
         initCloud();
-        
+
         fetch('/api/words')
             .then(res => res.json())
             .then(data => {
@@ -698,8 +729,8 @@
                 connectSSE();
             })
             .catch(e => { console.error(e); connectSSE(); });
-            
-        window.addEventListener('resize', () => location.reload());
+
+        window.addEventListener('resize', handleResize);
 
     </script>
 </body>

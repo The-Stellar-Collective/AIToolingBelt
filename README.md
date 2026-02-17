@@ -11,23 +11,18 @@ En samling verktyg och guider för AI-integration.
 
 ---
 
-MARKOV'S JOURNEY:
+## Idéhistorisk tolkning: Quetelet, Nekrasov, Markov
 
-  1. Observation (1900s):
-     "Bokstäver i rysk text är inte oberoende!
-     Övergångarna följer mönster"
+Den här historien kan också läsas genom en äldre statistisk lins:
 
-  2. Insikt (1906):
-     "Nästa tillstånd beror bara på nuvarande, inte historiken
-     Vi kan modellera detta med övergångssannolikheter!"
+- **Quetelet (1796-1874):** motsvarar hur sökmotorer fungerade i praktiken, där många källor vägs ihop för att hitta en gemensam sanning.  
+  ![Adolphe Quetelet](https://commons.wikimedia.org/wiki/Special:FilePath/Adolphe%20Qu%C3%A9telet%20by%20Joseph-Arnold%20Demannez.jpg)
+- **Nekrasov (1853-1924):** motsvarar vad man länge trodde att AI skulle ge, en mer entydig och samlad sanning med tydliga regler.  
+  ![Pavel Nekrasov](https://commons.wikimedia.org/wiki/Special:FilePath/NekrasovPA-2.jpg)
+- **Markov (1856-1922):** motsvarar vad vi faktiskt fick, system där betydelse skapas sekventiellt av kontext och beroenden mellan steg.  
+  ![Andrey Markov](https://commons.wikimedia.org/wiki/Special:FilePath/AAMarkov.jpg)
 
-  3. Formalisering (1906):
-     "Här är matematiken bakom detta..."
-     (Markov chains + stationär distribution)
-
-  4. Verifiering:
-     "Här's det för 'Eugene Onegin'"
-     (Bevis med verklig data)
+Kort sagt: från sökningens "genomsnittliga sanning", via förväntan om en enhetlig AI-sanning, till dagens kontextuella och kedjebaserade språkmodeller.
 
 ## Tidslinje
  1. GPU-Computing Infrastructure (2004-2008)
@@ -96,3 +91,10 @@ integrerade med människors verktyg och system. MCP är vår försök att göra 
 
 *"Precis som HTTP blev standarden för webben, vill vi att MCP ska bli standarden för
 hur AI-modeller integreras med världen omkring dem."*
+
+# Kombination
+
+* Administration
+* ordna information
+* Insikter
+* Delegera

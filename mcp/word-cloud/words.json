@@ -1,65 +1,34 @@
 {
   "words": [
     {
-      "word": "large-files-manager",
-      "description": "MCP Server",
-      "category": "mcp",
-      "size": 7,
-      "added": "2026-01-24T00:19:34.185074",
-      "updated": "2026-01-30T10:25:36.565043"
-    },
-    {
-      "word": "word-cloud",
-      "description": "MCP Server",
-      "category": "mcp",
-      "size": 7,
-      "added": "2026-01-24T00:19:34.185103",
-      "updated": "2026-01-30T10:25:36.565048"
-    },
-    {
-      "word": "Trello",
-      "description": "tool",
+      "word": "Slack",
+      "description": "Communication & messaging",
       "category": "koncept",
       "size": 7,
-      "added": "2026-01-24T00:20:52.131968",
-      "updated": "2026-01-24T01:07:40.487715"
+      "added": "2026-02-17T12:44:58.712774"
     },
     {
-      "word": "VS Code",
-      "description": "code editor",
+      "word": "PDF",
+      "description": "PDF tools - analyze, extract, fill, compare",
       "category": "koncept",
       "size": 7,
-      "added": "2026-01-24T00:20:57.366976"
+      "added": "2026-02-17T12:45:00.767748"
     },
     {
-      "word": "pdf generator",
-      "description": "tool",
-      "category": "koncept",
-      "size": 5,
-      "added": "2026-01-24T00:34:20.636071"
-    },
-    {
-      "word": "surf",
-      "description": "tool",
-      "category": "koncept",
-      "size": 5,
-      "added": "2026-01-24T00:34:26.084563"
-    },
-    {
-      "word": "stora filer",
-      "description": "tool",
+      "word": "Browser",
+      "description": "Browser automation - Claude in Chrome",
       "category": "koncept",
       "size": 7,
-      "added": "2026-01-24T01:07:48.272439"
+      "added": "2026-02-17T12:45:02.311778"
     },
     {
-      "word": "github",
-      "description": "MCP Server",
-      "category": "mcp",
+      "word": "Miro",
+      "description": "Miro - collaborative whiteboards",
+      "category": "koncept",
       "size": 7,
-      "added": "2026-01-30T10:25:36.565026"
+      "added": "2026-02-17T12:45:03.836910"
     }
   ],
-  "last_update": "2026-02-11T20:39:13.423252",
+  "last_update": "2026-02-17T12:45:03.836923",
   "connections": []
 }
