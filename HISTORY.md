@@ -1685,7 +1685,7 @@ Utan Transformers hade vi fortfarande stannat kring 1-2 miljarder parameters.
 Den här historien kan också läsas genom en äldre statistisk lins:
 
 - **Quetelet (1796-1874):** motsvarar hur sökmotorer fungerade i praktiken, där många källor vägs ihop för att hitta en gemensam sanning.  
-  ![Adolphe Quetelet](https://commons.wikimedia.org/wiki/Special:FilePath/Adolphe%20Qu%C3%A9telet%20by%20Joseph-Arnold%20Demannez.jpg)
+  ![Adolphe Quetelet](https://commons.wikimedia.org/wiki/Special:Redirect/file/Adolphe_Qu%C3%A9telet_by_Joseph-Arnold_Demannez.jpg)
 - **Nekrasov (1853-1924):** motsvarar vad man länge trodde att AI skulle ge, en mer entydig och samlad sanning med tydliga regler.  
   ![Pavel Nekrasov](https://commons.wikimedia.org/wiki/Special:FilePath/NekrasovPA-2.jpg)
 - **Markov (1856-1922):** motsvarar vad vi faktiskt fick, system där betydelse skapas sekventiellt av kontext och beroenden mellan steg.  
